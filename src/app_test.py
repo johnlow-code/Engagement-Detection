@@ -336,6 +336,7 @@ def app_image_detection():
         (locs, preds) = detect_engagement(frame, faceNet, engageNet)
         # loop over the detected face locations and their corresponding
         # locations
+        st.subheader("Result: ")
         for (box, pred) in zip(locs, preds):
             # unpack the bounding box and predictions
             (startX, startY, endX, endY) = box
@@ -343,6 +344,7 @@ def app_image_detection():
             # determine the class label and color we'll use to draw
             # the bounding box and text
             label = "Disengaged" if disengaged > engaged else "Engaged"
+            st.title(label)
             color = (0, 255, 0) if label == "disengaged" else (0, 0, 255)
             # include the probability in the label
             label = "{}: {:.2f}%".format(label, max(disengaged, engaged) * 100)
@@ -357,7 +359,7 @@ def app_image_detection():
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         predictedimage = st.image(frame)
-        st.subheader("Result: ",label)
+        st.text(label)
         cv2.destroyAllWindows()
 
     uploadedimage = st.file_uploader("Upload an image", type=['jpeg','png','jpg','gif'], accept_multiple_files=False)
