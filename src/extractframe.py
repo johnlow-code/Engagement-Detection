@@ -14,7 +14,6 @@ for video in folder_list:
         for clip in clip_list:
             clip_path = os.path.join(clipfolder_path,clip) #dataset/110001/1100011002/1100011002.avi 
         # actual path would be src\dataset\*\*\*.avi
-        # extract frame code here! https://www.geeksforgeeks.org/extract-images-from-video-in-python/
             print(clip_path)
             vid = cv2.VideoCapture(clip_path)
             while(True):
