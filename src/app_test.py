@@ -84,52 +84,43 @@ def download_file(url, download_to: Path, expected_size=None):
 
 
 RTC_CONFIGURATION = RTCConfiguration(
-    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]} 
 )
 
 
 def main():
-    MODEL_URL = "https://github.com/opencv/opencv_3rdparty/blob/dnn_samples_face_detector_20170830/res10_300x300_ssd_iter_140000.caffemodel"  # noqa: E501
+    MODEL_URL = "https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/res10_300x300_ssd_iter_140000.caffemodel"  # noqa: E501
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
-    PROTOTXT_URL = "https://github.com/jahnavi-prasad/face-mask-detection/blob/master/face_detector/deploy.prototxt"  # noqa: E501
-    PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt.txt"
+    PROTOTXT_URL = "https://github.com/jahnavi-prasad/face-mask-detection/raw/master/face_detector/deploy.prototxt"  # noqa: E501
+    PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
 
-    download_file(MODEL_URL, MODEL_LOCAL_PATH)
-    download_file(PROTOTXT_URL, PROTOTXT_LOCAL_PATH)
+    download_file(MODEL_URL, MODEL_LOCAL_PATH,expected_size=10666211)
+    download_file(PROTOTXT_URL, PROTOTXT_LOCAL_PATH,expected_size=28092) 
 
     st.header("Engagement Detection")
 
     pages = {
-        "Real time Engagement Detection (webcam)": app_real_time_detection(MODEL_LOCAL_PATH,PROTOTXT_LOCAL_PATH),
-        "Detect Engagement from an uploaded video": app_image_detection(MODEL_LOCAL_PATH,PROTOTXT_LOCAL_PATH),
-        "Detect Engagement from an uploaded video": app_video_detection(MODEL_LOCAL_PATH,PROTOTXT_LOCAL_PATH),
-        "Real time video transform with simple OpenCV filters (sendrecv)": app_video_filters,  # noqa: E501
-        "Delayed echo (sendrecv)": app_delayed_echo,
-        "Consuming media files on server-side and streaming it to browser (recvonly)": app_streaming,  # noqa: E501
-        "WebRTC is sendonly and images are shown via st.image() (sendonly)": app_sendonly_video,  # noqa: E501
-        "Simple video and audio loopback (sendrecv)": app_loopback,
-        "Configure media constraints and HTML element styles with loopback (sendrecv)": app_media_constraints,  # noqa: E501
-        "Control the playing state programatically": app_programatically_play,
-        "Customize UI texts": app_customize_ui_texts,
+        "Real time Detection (webcam)": app_real_time_detection,
+        "Detect Engagement (photo)": app_image_detection,
+        "Detect Engagement (video)": app_video_detection,
+        #"Real time video transform with simple OpenCV filters (sendrecv)": app_video_filters,  # noqa: E501
+        #"Delayed echo (sendrecv)": app_delayed_echo,
+        #"Consuming media files on server-side and streaming it to browser (recvonly)": app_streaming,  # noqa: E501
+        #"WebRTC is sendonly and images are shown via st.image() (sendonly)": app_sendonly_video,  # noqa: E501
+        #"Simple video and audio loopback (sendrecv)": app_loopback,
+        #"Configure media constraints and HTML element styles with loopback (sendrecv)": app_media_constraints,  # noqa: E501
+        #"Control the playing state programatically": app_programatically_play,
+        "Customize UI texts": app_customize_ui_texts
     }
-    page_titles = pages.keys()
+    page_function = pages.keys()
 
-    page_title = st.sidebar.selectbox(
+    selected_page = st.sidebar.selectbox(
         "Choose the app mode",
-        page_titles,
+        page_function
     )
-    st.subheader(page_title)
+    st.subheader(selected_page)
 
-    page_func = pages[page_title]
-    page_func()
-
-    st.sidebar.markdown(
-        """
----
-<a href="https://www.buymeacoffee.com/whitphx" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="180" height="50" ></a>
-    """,  # noqa: E501
-        unsafe_allow_html=True,
-    )
+    pages[selected_page]()
 
     logger.debug("=== Alive threads ===")
     for thread in threading.enumerate():
@@ -142,109 +133,9 @@ def app_loopback():
     webrtc_streamer(key="loopback")
 
 
-def app_video_filters():
-    """Video transforms with OpenCV"""
-
-    class OpenCVVideoProcessor(VideoProcessorBase):
-        type: Literal["noop", "cartoon", "edges", "rotate"]
-
-        def __init__(self) -> None:
-            self.type = "noop"
-
-        def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
-            img = frame.to_ndarray(format="bgr24")
-
-            if self.type == "noop":
-                pass
-            elif self.type == "cartoon":
-                # prepare color
-                img_color = cv2.pyrDown(cv2.pyrDown(img))
-                for _ in range(6):
-                    img_color = cv2.bilateralFilter(img_color, 9, 9, 7)
-                img_color = cv2.pyrUp(cv2.pyrUp(img_color))
-
-                # prepare edges
-                img_edges = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-                img_edges = cv2.adaptiveThreshold(
-                    cv2.medianBlur(img_edges, 7),
-                    255,
-                    cv2.ADAPTIVE_THRESH_MEAN_C,
-                    cv2.THRESH_BINARY,
-                    9,
-                    2,
-                )
-                img_edges = cv2.cvtColor(img_edges, cv2.COLOR_GRAY2RGB)
-
-                # combine color and edges
-                img = cv2.bitwise_and(img_color, img_edges)
-            elif self.type == "edges":
-                # perform edge detection
-                img = cv2.cvtColor(cv2.Canny(img, 100, 200), cv2.COLOR_GRAY2BGR)
-            elif self.type == "rotate":
-                # rotate image
-                rows, cols, _ = img.shape
-                M = cv2.getRotationMatrix2D((cols / 2, rows / 2), frame.time * 45, 1)
-                img = cv2.warpAffine(img, M, (cols, rows))
-
-            return av.VideoFrame.from_ndarray(img, format="bgr24")
-
-    webrtc_ctx = webrtc_streamer(
-        key="opencv-filter",
-        mode=WebRtcMode.SENDRECV,
-        rtc_configuration=RTC_CONFIGURATION,
-        video_processor_factory=OpenCVVideoProcessor,
-        media_stream_constraints={"video": True, "audio": False},
-        async_processing=True,
-    )
-
-    if webrtc_ctx.video_processor:
-        webrtc_ctx.video_processor.type = st.radio(
-            "Select transform type", ("noop", "cartoon", "edges", "rotate")
-        )
-
-    st.markdown(
-        "This demo is based on "
-        "https://github.com/aiortc/aiortc/blob/2362e6d1f0c730a0f8c387bbea76546775ad2fe8/examples/server/server.py#L34. "  # noqa: E501
-        "Many thanks to the project."
-    )
-
-
-
-def app_delayed_echo():
-    DEFAULT_DELAY = 1.0
-
-    class VideoProcessor(VideoProcessorBase):
-        delay = DEFAULT_DELAY
-
-        async def recv_queued(self, frames: List[av.VideoFrame]) -> List[av.VideoFrame]:
-            logger.debug("Delay:", self.delay)
-            await asyncio.sleep(self.delay)
-            return frames
-
-    class AudioProcessor(AudioProcessorBase):
-        delay = DEFAULT_DELAY
-
-        async def recv_queued(self, frames: List[av.AudioFrame]) -> List[av.AudioFrame]:
-            await asyncio.sleep(self.delay)
-            return frames
-
-    webrtc_ctx = webrtc_streamer(
-        key="delay",
-        mode=WebRtcMode.SENDRECV,
-        rtc_configuration=RTC_CONFIGURATION,
-        video_processor_factory=VideoProcessor,
-        audio_processor_factory=AudioProcessor,
-        async_processing=True,
-    )
-
-    if webrtc_ctx.video_processor and webrtc_ctx.audio_processor:
-        delay = st.slider("Delay", 0.0, 5.0, DEFAULT_DELAY, 0.05)
-        webrtc_ctx.video_processor.delay = delay
-        webrtc_ctx.audio_processor.delay = delay
-
-
-def app_real_time_detection(MODEL_LOCAL_PATH,PROTOTXT_LOCAL_PATH):
-
+def app_real_time_detection():
+    MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
+    PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
     DEFAULT_CONFIDENCE_THRESHOLD = 0.5
 
     class Detection(NamedTuple):
@@ -346,7 +237,7 @@ def app_real_time_detection(MODEL_LOCAL_PATH,PROTOTXT_LOCAL_PATH):
             return av.VideoFrame.from_ndarray(annotated_image, format="bgr24")  # Change this if theres any problem with the video format in bgr
 
     webrtc_ctx = webrtc_streamer(
-        key="real-time-detectioh",
+        key="real-time-detection",
         mode=WebRtcMode.SENDRECV,
         rtc_configuration=RTC_CONFIGURATION,
         video_processor_factory=MobileNetSSDVideoProcessor,
@@ -386,7 +277,9 @@ def app_real_time_detection(MODEL_LOCAL_PATH,PROTOTXT_LOCAL_PATH):
         "Many thanks to the project."
     )
 
-def app_image_detection(MODEL_LOCAL_PATH,PROTOTXT_LOCAL_PATH):
+def app_image_detection():
+    MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
+    PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
     model_name = "VGG19.model"
     model_path = os.path.join("src\models", model_name)
     engageNet = load_model(model_path)
@@ -470,8 +363,11 @@ def app_image_detection(MODEL_LOCAL_PATH,PROTOTXT_LOCAL_PATH):
     uploadedimage = st.file_uploader("Upload an image", type=['jpeg','png','jpg','gif'], accept_multiple_files=False)
     if uploadedimage != None:
         predictimage(uploadedimage)
+    
 
-def app_video_detection(MODEL_LOCAL_PATH,PROTOTXT_LOCAL_PATH):
+def app_video_detection():
+    MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
+    PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
     model_name = "VGG19.model"
     model_path = os.path.join("src\models", model_name)
     engageNet = load_model(model_path)
@@ -583,178 +479,6 @@ def app_video_detection(MODEL_LOCAL_PATH,PROTOTXT_LOCAL_PATH):
     uploadedvideo = st.file_uploader("Upload a video", type=['mp4','mpeg','mov'], accept_multiple_files=False)
     if uploadedvideo != None:
         predictvideo(uploadedvideo)
-
-def app_streaming():
-    """Media streamings"""
-    MEDIAFILES = {
-        "big_buck_bunny_720p_2mb.mp4 (local)": {
-            "url": "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_2mb.mp4",  # noqa: E501
-            "local_file_path": HERE / "data/big_buck_bunny_720p_2mb.mp4",
-            "type": "video",
-        },
-        "big_buck_bunny_720p_10mb.mp4 (local)": {
-            "url": "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_10mb.mp4",  # noqa: E501
-            "local_file_path": HERE / "data/big_buck_bunny_720p_10mb.mp4",
-            "type": "video",
-        },
-        "file_example_MP3_700KB.mp3 (local)": {
-            "url": "https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_700KB.mp3",  # noqa: E501
-            "local_file_path": HERE / "data/file_example_MP3_700KB.mp3",
-            "type": "audio",
-        },
-        "file_example_MP3_5MG.mp3 (local)": {
-            "url": "https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_5MG.mp3",  # noqa: E501
-            "local_file_path": HERE / "data/file_example_MP3_5MG.mp3",
-            "type": "audio",
-        },
-        "rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov": {
-            "url": "rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov",
-            "type": "video",
-        },
-    }
-    media_file_label = st.radio(
-        "Select a media source to stream", tuple(MEDIAFILES.keys())
-    )
-    media_file_info = MEDIAFILES[media_file_label]
-    if "local_file_path" in media_file_info:
-        download_file(media_file_info["url"], media_file_info["local_file_path"])
-
-    def create_player():
-        if "local_file_path" in media_file_info:
-            return MediaPlayer(str(media_file_info["local_file_path"]))
-        else:
-            return MediaPlayer(media_file_info["url"])
-
-        # NOTE: To stream the video from webcam, use the code below.
-        # return MediaPlayer(
-        #     "1:none",
-        #     format="avfoundation",
-        #     options={"framerate": "30", "video_size": "1280x720"},
-        # )
-
-    class OpenCVVideoProcessor(VideoProcessorBase):
-        type: Literal["noop", "cartoon", "edges", "rotate"]
-
-        def __init__(self) -> None:
-            self.type = "noop"
-
-        def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
-            img = frame.to_ndarray(format="bgr24")
-
-            if self.type == "noop":
-                pass
-            elif self.type == "cartoon":
-                # prepare color
-                img_color = cv2.pyrDown(cv2.pyrDown(img))
-                for _ in range(6):
-                    img_color = cv2.bilateralFilter(img_color, 9, 9, 7)
-                img_color = cv2.pyrUp(cv2.pyrUp(img_color))
-
-                # prepare edges
-                img_edges = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-                img_edges = cv2.adaptiveThreshold(
-                    cv2.medianBlur(img_edges, 7),
-                    255,
-                    cv2.ADAPTIVE_THRESH_MEAN_C,
-                    cv2.THRESH_BINARY,
-                    9,
-                    2,
-                )
-                img_edges = cv2.cvtColor(img_edges, cv2.COLOR_GRAY2RGB)
-
-                # combine color and edges
-                img = cv2.bitwise_and(img_color, img_edges)
-            elif self.type == "edges":
-                # perform edge detection
-                img = cv2.cvtColor(cv2.Canny(img, 100, 200), cv2.COLOR_GRAY2BGR)
-            elif self.type == "rotate":
-                # rotate image
-                rows, cols, _ = img.shape
-                M = cv2.getRotationMatrix2D((cols / 2, rows / 2), frame.time * 45, 1)
-                img = cv2.warpAffine(img, M, (cols, rows))
-
-            return av.VideoFrame.from_ndarray(img, format="bgr24")
-
-    webrtc_ctx = webrtc_streamer(
-        key=f"media-streaming-{media_file_label}",
-        mode=WebRtcMode.RECVONLY,
-        rtc_configuration=RTC_CONFIGURATION,
-        media_stream_constraints={
-            "video": media_file_info["type"] == "video",
-            "audio": media_file_info["type"] == "audio",
-        },
-        player_factory=create_player,
-        video_processor_factory=OpenCVVideoProcessor,
-    )
-
-    if media_file_info["type"] == "video" and webrtc_ctx.video_processor:
-        webrtc_ctx.video_processor.type = st.radio(
-            "Select transform type", ("noop", "cartoon", "edges", "rotate")
-        )
-
-    st.markdown(
-        "The video filter in this demo is based on "
-        "https://github.com/aiortc/aiortc/blob/2362e6d1f0c730a0f8c387bbea76546775ad2fe8/examples/server/server.py#L34. "  # noqa: E501
-        "Many thanks to the project."
-    )
-
-
-def app_sendonly_video():
-    """A sample to use WebRTC in sendonly mode to transfer frames
-    from the browser to the server and to render frames via `st.image`."""
-    webrtc_ctx = webrtc_streamer(
-        key="video-sendonly",
-        mode=WebRtcMode.SENDONLY,
-        rtc_configuration=RTC_CONFIGURATION,
-        media_stream_constraints={"video": True},
-    )
-
-    image_place = st.empty()
-
-    while True:
-        if webrtc_ctx.video_receiver:
-            try:
-                video_frame = webrtc_ctx.video_receiver.get_frame(timeout=1)
-            except queue.Empty:
-                logger.warning("Queue is empty. Abort.")
-                break
-
-            img_rgb = video_frame.to_ndarray(format="rgb24")
-            image_place.image(img_rgb)
-        else:
-            logger.warning("AudioReciver is not set. Abort.")
-            break
-
-
-def app_media_constraints():
-    """A sample to configure MediaStreamConstraints object"""
-    frame_rate = 5
-    webrtc_streamer(
-        key="media-constraints",
-        mode=WebRtcMode.SENDRECV,
-        rtc_configuration=RTC_CONFIGURATION,
-        media_stream_constraints={
-            "video": {"frameRate": {"ideal": frame_rate}},
-        },
-        video_html_attrs={
-            "style": {"width": "50%", "margin": "0 auto", "border": "5px yellow solid"},
-            "controls": False,
-            "autoPlay": True,
-        },
-    )
-    st.write(f"The frame rate is set as {frame_rate}. Video style is changed.")
-
-
-def app_programatically_play():
-    """A sample of controlling the playing state from Python."""
-    playing = st.checkbox("Playing", value=True)
-
-    webrtc_streamer(
-        key="programatic_control",
-        desired_playing_state=playing,
-        mode=WebRtcMode.SENDRECV,
-        rtc_configuration=RTC_CONFIGURATION,
-    )
 
 
 def app_customize_ui_texts():
