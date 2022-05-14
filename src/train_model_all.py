@@ -165,7 +165,7 @@ plt.savefig(os.path.join(results_path,"ConfusionMatrix.png"))
 
 # SERIALIZE model to the disk
 print("[INFO] saving Engagement detection model...")
-model_filename= str(model_name_str[model_num]) +".model"                                  # Note to self: change the model name here, or else it will overwrite
+model_filename= str(model_name_str[model_num]) +".h5"                                  
 model_path = os.path.join(r"src\models",model_filename)
 model.save(model_path, save_format="h5")
 

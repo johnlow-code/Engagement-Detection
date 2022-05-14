@@ -150,7 +150,7 @@ def app_real_time_detection():
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
 
-            model_name = "VGG19.model"
+            model_name = "VGG19.h5"
             model_path = os.path.join("src\models", model_name)
             self.engageNet = load_model(model_path)
 
@@ -280,7 +280,7 @@ def app_real_time_detection():
 def app_image_detection():
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
-    model_name = "VGG19.model"
+    model_name = "VGG19.h5"
     model_path = os.path.join("src\models", model_name)
     engageNet = load_model(model_path)
     faceNet  = cv2.dnn.readNet(
@@ -370,7 +370,7 @@ def app_image_detection():
 def app_video_detection():
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
-    model_name = "VGG19.model"
+    model_name = "VGG19.h5"
     model_path = os.path.join("src\models", model_name)
     engageNet = load_model(model_path)
     faceNet  = cv2.dnn.readNet(
