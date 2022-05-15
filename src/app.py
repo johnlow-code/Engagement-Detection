@@ -247,37 +247,34 @@ def app_real_time_detection():
         async_processing=True,
     )
 
-    confidence_threshold = st.slider(
-        "Confidence threshold", 0.0, 1.0, DEFAULT_CONFIDENCE_THRESHOLD, 0.05
-    )
-    if webrtc_ctx.video_processor:
-        webrtc_ctx.video_processor.confidence_threshold = confidence_threshold
+    # confidence_threshold = st.slider(
+    #     "Confidence threshold", 0.0, 1.0, DEFAULT_CONFIDENCE_THRESHOLD, 0.05
+    # )
+    # if webrtc_ctx.video_processor:
+    #     webrtc_ctx.video_processor.confidence_threshold = confidence_threshold
 
-    if st.checkbox("Show the detected labels", value=True):
-        if webrtc_ctx.state.playing:
-            labels_placeholder = st.empty()
-            # NOTE: The video transformation with object detection and
-            # this loop displaying the result labels are running
-            # in different threads asynchronously.
-            # Then the rendered video frames and the labels displayed here
-            # are not strictly synchronized.
-            while True:
-                if webrtc_ctx.video_processor:
-                    try:
-                        result = webrtc_ctx.video_processor.result_queue.get(
-                            timeout=1.0
-                        )
-                    except queue.Empty:
-                        result = None
-                    labels_placeholder.table(result)
-                else:
-                    break
+    # if st.checkbox("Show the detected labels", value=True):
+    #     if webrtc_ctx.state.playing:
+    #         labels_placeholder = st.empty()
+    #         # NOTE: The video transformation with object detection and
+    #         # this loop displaying the result labels are running
+    #         # in different threads asynchronously.
+    #         # Then the rendered video frames and the labels displayed here
+    #         # are not strictly synchronized.
+    #         while True:
+    #             if webrtc_ctx.video_processor:
+    #                 try:
+    #                     result = webrtc_ctx.video_processor.result_queue.get(
+    #                         timeout=1.0
+    #                     )
+    #                 except queue.Empty:
+    #                     result = None
+    #                 labels_placeholder.table(result)
+    #             else:
+    #                 break
 
-    st.markdown(
-        "This demo uses a model and code from "
-        "https://github.com/robmarkcole/object-detection-app. "
-        "Many thanks to the project."
-    )
+    st.markdown()
+    
 
 def app_image_detection():
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
@@ -479,7 +476,7 @@ def app_video_detection():
         engagementrate = calc_engagementrate(engagedcount,disengagedcount)
         st.write("Engaged: ",engagementrate[0],"%, Disengaged:",engagementrate[1],"%")
         cap.release()
-        cv2.destroyAllWindows()
+        #cv2.destroyAllWindows()
 
     uploadedvideo = st.file_uploader("Upload a video", type=['mp4','mpeg','mov'], accept_multiple_files=False)
     if uploadedvideo != None:
