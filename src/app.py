@@ -20,8 +20,7 @@ from aiortc.contrib.media import MediaPlayer
 from tensorflow.keras.applications import imagenet_utils				# Preprocess for any models
 from tensorflow.keras.applications.inception_v3 import preprocess_input	# Preprocess for Inception and Xception
 from tensorflow.keras.preprocessing.image import img_to_array
-from keras.saving.save import load_model
-
+from tensorflow.keras.models import load_model
 from streamlit_webrtc import (
     AudioProcessorBase,
     RTCConfiguration,
