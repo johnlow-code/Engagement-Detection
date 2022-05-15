@@ -20,7 +20,7 @@ from aiortc.contrib.media import MediaPlayer
 from tensorflow.keras.applications import imagenet_utils				# Preprocess for any models
 from tensorflow.keras.applications.inception_v3 import preprocess_input	# Preprocess for Inception and Xception
 from tensorflow.keras.preprocessing.image import img_to_array
-from tensorflow.keras.models import load_model
+from keras.saving.save import load_model
 
 from streamlit_webrtc import (
     AudioProcessorBase,
@@ -166,14 +166,14 @@ def app_real_time_detection():
 
                 # determine the class label and color we'll use to draw
                 # the bounding box and text
-                if engaged > disengaged:
+                if engaged > 0.001:                             # Tune the Sensitivity here, default is if engaged > disengaged
                     label = "Engaged"
-                    engagedcount = engagedcount+1
+                    #engagedcount = engagedcount+1
                     color = (0, 255, 0)
 
                 else:
                     label = "Disengaged"
-                    disengagedcount = disengagedcount+1
+                    #disengagedcount = disengagedcount+1
                     color = (0, 0, 255)
                 
                 #st.session_state.engagedcount = engagedcount
@@ -189,12 +189,12 @@ def app_real_time_detection():
                     cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
                 cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
 
-            return frame, result
+            return frame
 
         def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
             frame = frame.to_ndarray(format="bgr24")    # Change this if theres any problem with image format in bgr
             (h, w) = frame.shape[:2]
-            blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224),
+            blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224),    #Change to 224 for imagenet, 299 for xception, inception
 		    (104.0, 177.0, 123.0))
             self._net.setInput(blob)
             detections = self._net.forward()
@@ -217,9 +217,9 @@ def app_real_time_detection():
 
                     face = frame[startY:endY, startX:endX]
                     #face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
-                    face = cv2.resize(face, (224, 224))
+                    face = cv2.resize(face, (224, 224))                 #Change here too
                     face = img_to_array(face)
-                    face = imagenet_utils.preprocess_input(face)
+                    face = imagenet_utils.preprocess_input(face)   #add imagenet_utils for models other than xception, inception
 
                     faces.append(face)
                     locs.append((startX, startY, endX, endY))
@@ -228,11 +228,11 @@ def app_real_time_detection():
                 faces = np.array(faces, dtype="float32")
                 preds = self.engageNet.predict(faces, batch_size=32)
 
-            annotated_image, result = self._annotate_image(frame, locs, preds)
+            annotated_image = self._annotate_image(frame, locs, preds)
 
             # NOTE: This `recv` method is called in another thread,
             # so it must be thread-safe.
-            self.result_queue.put(result)
+            #self.result_queue.put(result)
 
             return av.VideoFrame.from_ndarray(annotated_image, format="bgr24")  # Change this if theres any problem with the video format in bgr
 
@@ -343,9 +343,9 @@ def app_image_detection():
             (disengaged, engaged) = pred
             # determine the class label and color we'll use to draw
             # the bounding box and text
-            label = "Disengaged" if disengaged > engaged else "Engaged"
+            label = "Engaged" if engaged > 0.001 else "Disengaged"       # Tune the Sensitivity here, default is if engaged > disengaged
             st.title(label)
-            color = (0, 255, 0) if label == "disengaged" else (0, 0, 255)
+            color = (0, 255, 0) if label == "Engaged" else (0, 0, 255)
             # include the probability in the label
             label = "{}: {:.2f}%".format(label, max(disengaged, engaged) * 100)
 
@@ -451,7 +451,7 @@ def app_video_detection():
 
                     # determine the class label and color we'll use to draw
                     # the bounding box and text
-                    if engaged > disengaged:
+                    if engaged > 0.001:                      # Tune the Sensitivity here, default is if engaged > disengaged
                         label = "Engaged"
                         engagedcount = engagedcount+1
                         color = (0, 255, 0)
