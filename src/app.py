@@ -152,7 +152,7 @@ def app_real_time_detection():
 
             model_name = "VGG19.h5"
             model_path = os.path.join("src\models", model_name)
-            self.engageNet = load_model("src\models\VGG19.h5")
+            self.engageNet = load_model("src/models/VGG19.h5")
 
             self.confidence_threshold = DEFAULT_CONFIDENCE_THRESHOLD
             self.result_queue = queue.Queue()
@@ -282,7 +282,7 @@ def app_image_detection():
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
     model_name = "VGG19.h5"
     model_path = os.path.join("src\models", model_name)
-    engageNet = load_model("src\models\VGG19.h5")
+    engageNet = load_model("src/models/VGG19.h5")
     faceNet  = cv2.dnn.readNet(
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
@@ -372,7 +372,7 @@ def app_video_detection():
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
     model_name = "VGG19.h5"
     model_path = os.path.join("src\models", model_name)
-    engageNet = load_model("src\models\VGG19.h5")
+    engageNet = load_model("src/models/VGG19.h5")
     faceNet  = cv2.dnn.readNet(
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
