@@ -360,7 +360,7 @@ def app_image_detection():
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         predictedimage = st.image(frame)
         st.text(label)
-        cv2.destroyAllWindows()
+        #cv2.destroyAllWindows()
 
     uploadedimage = st.file_uploader("Upload an image", type=['jpeg','png','jpg','gif'], accept_multiple_files=False)
     if uploadedimage != None:
