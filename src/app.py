@@ -93,7 +93,7 @@ def main():
     PROTOTXT_URL = "https://github.com/jahnavi-prasad/face-mask-detection/raw/master/face_detector/deploy.prototxt"  # noqa: E501
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
     VGG19_URL = "https://github.com/johnlow-code/Engagement-Detection/blob/main/src/models/VGG19.h5?raw=true"
-    VGG19_LOCAL_PATH = HERE / "./models/VGG19.h5"
+    VGG19_LOCAL_PATH = HERE / "./models/VGG198.h5"
 
     download_file(MODEL_URL, MODEL_LOCAL_PATH,expected_size=10666211)
     download_file(PROTOTXT_URL, PROTOTXT_LOCAL_PATH,expected_size=28092) 
@@ -279,10 +279,10 @@ def app_real_time_detection():
 def app_image_detection():
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
-    VGG19_LOCAL_PATH = HERE / "./models/VGG19.h5"
+    VGG19_LOCAL_PATH = HERE / "./models/VGG198.h5"
     model_name = "VGG19.h5"
     model_path = os.path.join("src\models", model_name)
-    engageNet = load_model(str(VGG19_LOCAL_PATH))
+    engageNet = load_model("src\models\VGG19.h5")
     faceNet  = cv2.dnn.readNet(
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
