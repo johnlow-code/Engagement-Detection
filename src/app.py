@@ -337,6 +337,12 @@ def app_image_detection():
         # loop over the detected face locations and their corresponding
         # locations
         st.subheader("Result: ")
+
+        if locs==[]:
+            predictedimage = st.image(frame)
+            st.warning("No face has been detected. Please try again with another image.")
+            return
+
         for (box, pred) in zip(locs, preds):
             # unpack the bounding box and predictions
             (startX, startY, endX, endY) = box
@@ -377,6 +383,8 @@ def app_video_detection():
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
     def calc_engagementrate(engagedcount, disengagedcount):
+        if engagedcount+disengagedcount==0:
+            return ""
         total = engagedcount+disengagedcount
         engagedrate = (float(engagedcount)/float(total))*100
         engagedrate = round(engagedrate, 2)
@@ -474,7 +482,10 @@ def app_video_detection():
                 break
 
         engagementrate = calc_engagementrate(engagedcount,disengagedcount)
-        st.write("Engaged: ",engagementrate[0],"%, Disengaged:",engagementrate[1],"%")
+        if engagedcount==0 or disengagedcount==0:
+            st.warning("No face has been detected. Please try again with another video.")
+        else:
+            st.write("Engaged: ",engagementrate[0],"%, Disengaged:",engagementrate[1],"%")
         cap.release()
         #cv2.destroyAllWindows()
 
