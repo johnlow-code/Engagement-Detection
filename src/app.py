@@ -339,6 +339,7 @@ def app_image_detection():
         st.subheader("Result: ")
 
         if locs==[]:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             predictedimage = st.image(frame)
             st.warning("No face has been detected. Please try again with another image.")
             return
