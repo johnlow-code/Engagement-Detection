@@ -273,7 +273,7 @@ def app_real_time_detection():
     #             else:
     #                 break
 
-    st.markdown()
+    # st.markdown()
     
 
 def app_image_detection():
