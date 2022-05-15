@@ -17,10 +17,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 from aiortc.contrib.media import MediaPlayer
+import tensorflow as tf
 from tensorflow.keras.applications import imagenet_utils				# Preprocess for any models
 from tensorflow.keras.applications.inception_v3 import preprocess_input	# Preprocess for Inception and Xception
 from tensorflow.keras.preprocessing.image import img_to_array
-from tensorflow.keras.models import load_model
+#from tensorflow.keras.models import load_model
 
 from streamlit_webrtc import (
     AudioProcessorBase,
@@ -152,7 +153,7 @@ def app_real_time_detection():
 
             model_name = "VGG19.h5"
             model_path = os.path.join("src\models", model_name)
-            self.engageNet = load_model("src/models/VGG19.h5")
+            self.engageNet = tf.keras.models.load_model('./static/models/object_detection.h5')
 
             self.confidence_threshold = DEFAULT_CONFIDENCE_THRESHOLD
             self.result_queue = queue.Queue()
@@ -282,7 +283,7 @@ def app_image_detection():
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
     model_name = "VGG19.h5"
     model_path = os.path.join("src\models", model_name)
-    engageNet = load_model("src/models/VGG19.h5")
+    engageNet = tf.keras.models.load_model('./src/models/VGG19.h5')
     faceNet  = cv2.dnn.readNet(
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
@@ -372,7 +373,7 @@ def app_video_detection():
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
     model_name = "VGG19.h5"
     model_path = os.path.join("src\models", model_name)
-    engageNet = load_model("src/models/VGG19.h5")
+    engageNet = tf.keras.models.load_model('./src/models/VGG19.h5')
     faceNet  = cv2.dnn.readNet(
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
