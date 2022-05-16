@@ -92,7 +92,8 @@ def main():
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
     PROTOTXT_URL = "https://github.com/jahnavi-prasad/face-mask-detection/raw/master/face_detector/deploy.prototxt"  # noqa: E501
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
-    VGG19_URL = "https://github.com/johnlow-code/Engagement-Detection/blob/main/src/models/VGG19.h5?raw=true"
+    VGG19_URL = "https://www.dropbox.com/s/jm6qxnxhhafjfkq/VGG19.h5?dl=1"
+    #VGG19_URL = "https://github.com/johnlow-code/Engagement-Detection/blob/main/src/models/VGG19.h5?raw=true"
     VGG19_LOCAL_PATH = HERE / "./models/VGG19.h5"
 
     download_file(MODEL_URL, MODEL_LOCAL_PATH,expected_size=10666211)
