@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 from aiortc.contrib.media import MediaPlayer
-from tensorflow.keras.applications import imagenet_utils				# Preprocess for any models
+#from tensorflow.keras.applications.vgg19 import preprocess_input				# Preprocess for any models
 from tensorflow.keras.applications.inception_v3 import preprocess_input	# Preprocess for Inception and Xception
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
@@ -36,7 +36,6 @@ HERE = Path(__file__).parent
 logger = logging.getLogger(__name__)
 
 
-# This code is based on https://github.com/streamlit/demo-self-driving/blob/230245391f2dda0cb464008195a470751c01770b/streamlit_app.py#L48  # noqa: E501
 def download_file(url, download_to: Path, expected_size=None):
     # Don't download the file twice.
     # (If possible, verify the download using the file length.)
@@ -92,13 +91,16 @@ def main():
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
     PROTOTXT_URL = "https://github.com/jahnavi-prasad/face-mask-detection/raw/master/face_detector/deploy.prototxt"  # noqa: E501
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
-    VGG19_URL = "https://www.dropbox.com/s/jm6qxnxhhafjfkq/VGG19.h5?dl=1"
+    #VGG19_URL = "https://www.dropbox.com/s/jm6qxnxhhafjfkq/VGG19.h5?dl=1"
     #VGG19_URL = "https://github.com/johnlow-code/Engagement-Detection/blob/main/src/models/VGG19.h5?raw=true"
-    VGG19_LOCAL_PATH = HERE / "./models/VGG19.h5"
+    #VGG19_LOCAL_PATH = HERE / "./models/VGG19.h5"
+    InceptionV3_URL="https://www.dropbox.com/s/76wezvqe70ore9e/InceptionV3.h5?dl=1"
+    InceptionV3_LOCAL_PATH = HERE / "./models/InceptionV3.h5"
+    
 
     download_file(MODEL_URL, MODEL_LOCAL_PATH,expected_size=10666211)
     download_file(PROTOTXT_URL, PROTOTXT_LOCAL_PATH,expected_size=28092) 
-    download_file(VGG19_URL, VGG19_LOCAL_PATH, expected_size=119153144)
+    download_file(InceptionV3_URL, InceptionV3_LOCAL_PATH, expected_size=289840008)
 
     st.header("Engagement Detection")
 
@@ -139,6 +141,7 @@ def app_loopback():
 def app_real_time_detection():
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
+    InceptionV3_LOCAL_PATH = HERE / "./models/InceptionV3.h5"
     DEFAULT_CONFIDENCE_THRESHOLD = 0.5
 
     class Detection(NamedTuple):
@@ -153,11 +156,11 @@ def app_real_time_detection():
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
 
-            model_name = "VGG19.h5"
-            model_path = os.path.join("src\models", model_name)
-            self.engageNet = load_model('src/models/VGG19.h5')
+            model_name = "InceptionV3.h5"
+            self.engageNet = load_model(InceptionV3_LOCAL_PATH)
 
             self.confidence_threshold = DEFAULT_CONFIDENCE_THRESHOLD
+            self.engagedcount = [0,0]
             self.result_queue = queue.Queue()
 
         def _annotate_image(self, frame, locs, preds):
@@ -169,14 +172,14 @@ def app_real_time_detection():
 
                 # determine the class label and color we'll use to draw
                 # the bounding box and text
-                if engaged > 0.001:                             # Tune the Sensitivity here, default is if engaged > disengaged
+                if engaged > disengaged:                             # Tune the Sensitivity here, default is if engaged > disengaged
                     label = "Engaged"
-                    #engagedcount = engagedcount+1
+                    self.engagedcount[1] = self.engagedcount[1]+1
                     color = (0, 255, 0)
 
                 else:
                     label = "Disengaged"
-                    #disengagedcount = disengagedcount+1
+                    self.engagedcount[0] = self.engagedcount[0]+1
                     color = (0, 0, 255)
                 
                 #st.session_state.engagedcount = engagedcount
@@ -197,7 +200,7 @@ def app_real_time_detection():
         def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
             frame = frame.to_ndarray(format="bgr24")    # Change this if theres any problem with image format in bgr
             (h, w) = frame.shape[:2]
-            blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224),    #Change to 224 for imagenet, 299 for xception, inception
+            blob = cv2.dnn.blobFromImage(frame, 1.0, (299,299),    #Change to 224 for imagenet, 299 for xception, inception
 		    (104.0, 177.0, 123.0))
             self._net.setInput(blob)
             detections = self._net.forward()
@@ -220,9 +223,9 @@ def app_real_time_detection():
 
                     face = frame[startY:endY, startX:endX]
                     #face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
-                    face = cv2.resize(face, (224, 224))                 #Change here too
+                    face = cv2.resize(face, (299, 299))                 #Change here too
                     face = img_to_array(face)
-                    face = imagenet_utils.preprocess_input(face)   #add imagenet_utils for models other than xception, inception
+                    face = preprocess_input(face)   #add imagenet_utils for models other than xception, inception
 
                     faces.append(face)
                     locs.append((startX, startY, endX, endY))
@@ -280,16 +283,15 @@ def app_real_time_detection():
 def app_image_detection():
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
-    VGG19_LOCAL_PATH = HERE / "./models/VGG19.h5"
-    model_name = "VGG19.h5"
-    model_path = os.path.join("src\models", model_name)
-    engageNet = load_model(VGG19_LOCAL_PATH)
+    InceptionV3_LOCAL_PATH = HERE / "./models/InceptionV3.h5"
+    model_name = "InceptionV3.h5"
+    engageNet = load_model(InceptionV3_LOCAL_PATH)
     faceNet  = cv2.dnn.readNet(
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
     def detect_engagement(frame, faceNet, engageNet): 	#recv
         (h, w) = frame.shape[:2]
-        blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224),
+        blob = cv2.dnn.blobFromImage(frame, 1.0, (299, 299),
             (104.0, 177.0, 123.0))
 
         faceNet.setInput(blob)
@@ -313,9 +315,9 @@ def app_image_detection():
 
                 face = frame[startY:endY, startX:endX]
                 face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
-                face = cv2.resize(face, (224, 224))
+                face = cv2.resize(face, (299, 299))
                 face = img_to_array(face)
-                face = imagenet_utils.preprocess_input(face)
+                face = preprocess_input(face)
 
                 faces.append(face)
                 locs.append((startX, startY, endX, endY))
@@ -351,7 +353,7 @@ def app_image_detection():
             (disengaged, engaged) = pred
             # determine the class label and color we'll use to draw
             # the bounding box and text
-            label = "Engaged" if engaged > 0.001 else "Disengaged"       # Tune the Sensitivity here, default is if engaged > disengaged
+            label = "Engaged" if engaged > disengaged else "Disengaged"       # Tune the Sensitivity here, default is if engaged > disengaged
             st.title(label)
             color = (0, 255, 0) if label == "Engaged" else (0, 0, 255)
             # include the probability in the label
@@ -378,9 +380,9 @@ def app_image_detection():
 def app_video_detection():
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
-    model_name = "VGG19.h5"
-    model_path = os.path.join("src\models", model_name)
-    engageNet = load_model('src/models/VGG19.h5')
+    InceptionV3_LOCAL_PATH = HERE / "./models/InceptionV3.h5"
+    model_name = "InceptionV3.h5"
+    engageNet = load_model(InceptionV3_LOCAL_PATH)
     faceNet  = cv2.dnn.readNet(
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
@@ -395,7 +397,7 @@ def app_video_detection():
 
     def detect_engagement(frame, faceNet, engageNet): 	#recv
         (h, w) = frame.shape[:2]
-        blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224),
+        blob = cv2.dnn.blobFromImage(frame, 1.0, (299, 299),
             (104.0, 177.0, 123.0))
 
         faceNet.setInput(blob)
@@ -419,9 +421,9 @@ def app_video_detection():
 
                 face = frame[startY:endY, startX:endX]
                 face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
-                face = cv2.resize(face, (224, 224))
+                face = cv2.resize(face, (299, 299))
                 face = img_to_array(face)
-                face = imagenet_utils.preprocess_input(face)
+                face = preprocess_input(face)
 
                 faces.append(face)
                 locs.append((startX, startY, endX, endY))
@@ -461,7 +463,7 @@ def app_video_detection():
 
                     # determine the class label and color we'll use to draw
                     # the bounding box and text
-                    if engaged > 0.001:                      # Tune the Sensitivity here, default is if engaged > disengaged
+                    if engaged > disengaged:                      # Tune the Sensitivity here, default is if engaged > disengaged
                         label = "Engaged"
                         engagedcount = engagedcount+1
                         color = (0, 255, 0)
