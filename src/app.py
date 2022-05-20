@@ -1,4 +1,6 @@
-#import asyncio
+import asyncio
+import datetime
+import pandas as pd
 import logging
 import queue
 import threading
@@ -13,7 +15,7 @@ except ImportError:
 
 import av
 import cv2
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 import numpy as np
 import streamlit as st
 from aiortc.contrib.media import MediaPlayer
@@ -137,19 +139,29 @@ def app_loopback():
     """Simple video loopback"""
     webrtc_streamer(key="loopback")
 
+def calc_engagement(engagedcount,disengagedcount):
+    total = engagedcount+disengagedcount
+    if total ==0:
+        return 0.5
+    return (engagedcount/total*100.0)
 
 def app_real_time_detection():
+    #global enagagedcount
+    #engagedcount = [0,0]
+    #df = pd.DataFrame(columns=['Minutes','Engagement Rate'])
+    #ratedata = np.array([])
+    #rate = 0
+    #num_minutes = 0
     MODEL_LOCAL_PATH = HERE / "./face_detector/res10_300x300_ssd_iter_140000.caffemodel"
     PROTOTXT_LOCAL_PATH = HERE / "./face_detector/deploy.prototxt"
     InceptionV3_LOCAL_PATH = HERE / "./models/InceptionV3.h5"
     DEFAULT_CONFIDENCE_THRESHOLD = 0.5
 
-    class Detection(NamedTuple):
-        name: str
-        prob: float
+    #class Detection(Named):
+    #    engagestatus: str
 
     class MobileNetSSDVideoProcessor(VideoProcessorBase):
-        result_queue: "queue.Queue[List[Detection]]"
+        result_queue: "queue.Queue[List]"
 
         def __init__(self) -> None:
             self._net = cv2.dnn.readNet(
@@ -160,10 +172,10 @@ def app_real_time_detection():
             self.engageNet = load_model(InceptionV3_LOCAL_PATH)
 
             self.confidence_threshold = DEFAULT_CONFIDENCE_THRESHOLD
-            self.engagedcount = [0,0]
             self.result_queue = queue.Queue()
 
         def _annotate_image(self, frame, locs, preds):
+            result: List = []
             # loop over the detections
             for (box, pred) in zip(locs, preds):
                 # unpack the bounding box and predictions
@@ -172,20 +184,19 @@ def app_real_time_detection():
 
                 # determine the class label and color we'll use to draw
                 # the bounding box and text
-                if engaged > disengaged:                             # Tune the Sensitivity here, default is if engaged > disengaged
+                if engaged > self.confidence_threshold:                             # Tune the Sensitivity here, default is if engaged > disengaged
                     label = "Engaged"
-                    self.engagedcount[1] = self.engagedcount[1]+1
                     color = (0, 255, 0)
 
                 else:
                     label = "Disengaged"
-                    self.engagedcount[0] = self.engagedcount[0]+1
                     color = (0, 0, 255)
                 
+                result.append(label)
                 #st.session_state.engagedcount = engagedcount
                 #st.session_state.disengagedcount = disengagedcount
                 #st.session_state.totalcount = engagedcount+disengagedcount
-               
+                #yield engagedcount
                 # include the probability in the label
                 label = "{}: {:.2f}%".format(label, max(disengaged, engaged) * 100)
 
@@ -195,7 +206,7 @@ def app_real_time_detection():
                     cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
                 cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
 
-            return frame
+            return frame, result
 
         def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
             frame = frame.to_ndarray(format="bgr24")    # Change this if theres any problem with image format in bgr
@@ -204,7 +215,7 @@ def app_real_time_detection():
 		    (104.0, 177.0, 123.0))
             self._net.setInput(blob)
             detections = self._net.forward()
-            print(detections.shape)
+            #print(detections.shape)
 
             faces = []
             locs = []
@@ -234,7 +245,9 @@ def app_real_time_detection():
                 faces = np.array(faces, dtype="float32")
                 preds = self.engageNet.predict(faces, batch_size=32)
 
-            annotated_image = self._annotate_image(frame, locs, preds)
+            annotated_image, result = self._annotate_image(frame, locs, preds)
+            if result != []:
+                self.result_queue.put(result)
 
             # NOTE: This `recv` method is called in another thread,
             # so it must be thread-safe.
@@ -251,31 +264,53 @@ def app_real_time_detection():
         async_processing=True,
     )
 
-    # confidence_threshold = st.slider(
-    #     "Confidence threshold", 0.0, 1.0, DEFAULT_CONFIDENCE_THRESHOLD, 0.05
-    # )
-    # if webrtc_ctx.video_processor:
-    #     webrtc_ctx.video_processor.confidence_threshold = confidence_threshold
+    confidence_threshold = st.slider(
+       "Sensitivity to engagement", 0.0, 1.0, DEFAULT_CONFIDENCE_THRESHOLD, 0.05
+    )
+    if webrtc_ctx.video_processor:
+        webrtc_ctx.video_processor.confidence_threshold = 1-confidence_threshold
 
-    # if st.checkbox("Show the detected labels", value=True):
-    #     if webrtc_ctx.state.playing:
-    #         labels_placeholder = st.empty()
-    #         # NOTE: The video transformation with object detection and
-    #         # this loop displaying the result labels are running
-    #         # in different threads asynchronously.
-    #         # Then the rendered video frames and the labels displayed here
-    #         # are not strictly synchronized.
-    #         while True:
-    #             if webrtc_ctx.video_processor:
-    #                 try:
-    #                     result = webrtc_ctx.video_processor.result_queue.get(
-    #                         timeout=1.0
-    #                     )
-    #                 except queue.Empty:
-    #                     result = None
-    #                 labels_placeholder.table(result)
-    #             else:
-    #                 break
+    #if st.checkbox("Show stats", value=True):
+    if st.checkbox("Show Stats", value=True):
+        if webrtc_ctx.state.playing:
+            ratedata = np.array([])
+            max_runtime = 1
+            # NOTE: The video transformation with object detection and
+            # this loop displaying the result labels are running
+            # in different threads asynchronously.
+            # Then the rendered video frames and the labels displayed here
+            # are not strictly synchronized.
+            while True:
+                if webrtc_ctx.input_video_track.readyState=="live":
+                    start_time = datetime.datetime.now()
+                    engagedarray = []
+                    while (datetime.datetime.now()-start_time).seconds < max_runtime:
+                        try:
+                            result = webrtc_ctx.video_processor.result_queue.get(
+                                timeout=1.0
+                            )
+                            #append it to an array
+                            engagedarray.append(result)
+                        except queue.Empty:
+                            result = None
+                        
+                    ratedata = np.append(ratedata, calc_engagement(engagedarray.count(['Engaged']),engagedarray.count(['Disengaged'])))
+                    engagedarray.clear()
+                    start_time = datetime.datetime.now()
+                else:
+                    df = pd.DataFrame(columns=['Minutes','Engagement Rate'])
+                    df = df.append(pd.DataFrame(ratedata, columns=['Engagement Rate']), ignore_index=True)
+                    x = list(range(1,len(ratedata)+1))
+                    df = df.append(pd.DataFrame(x, columns=['Minutes']), ignore_index=True)
+                    st.session_state.dataframe = df
+                    break
+
+
+        if "dataframe" in st.session_state:
+            df = st.session_state["dataframe"]
+            st.line_chart(df["Engagement Rate"])
+
+        #plot graph 
 
     # st.markdown()
     
