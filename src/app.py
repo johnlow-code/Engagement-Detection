@@ -470,21 +470,23 @@ def app_video_detection():
         return (locs, preds)
 
     def predictvideo(uploadedvideo):
-        vid = uploadedvideo.name
-        with open(vid, mode='wb') as f:
-            f.write(uploadedvideo.read()) #save the video to disk
-        
+        vid = uploadedvideo.name 
         engagedcount=0
         disengagedcount=0
-        st_video = open(vid,'rb')
-        video_bytes = st_video.read()
-        st.video(video_bytes)
-        st.write("Uploaded Video")
+        processing_text = st.empty()
+        processing_text.write("Processing video...")
         cap = cv2.VideoCapture(vid)
-        count = 0
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        steps = (100.0/total)/100
+        progress = 0.0
+        progressbar = st.progress(0)
+        frame_window = st.image([])
         while True:
             _, frame = cap.read()
+
             if _ != False:
+                progress = progress+steps
+                progressbar.progress(progress)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame = imutils.resize(frame, width=400)
 
@@ -516,11 +518,17 @@ def app_video_detection():
                     cv2.putText(frame, label, (startX, startY - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
                     cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
+                
+                frame_window.image(frame)
 
             else:
                 break
 
         engagementrate = calc_engagementrate(engagedcount,disengagedcount)
+        frame_window.empty()
+        progressbar.empty()
+        processing_text.empty()
+        
         if engagedcount==0 or disengagedcount==0:
             st.warning("No face has been detected. Please try again with another video.")
         else:
