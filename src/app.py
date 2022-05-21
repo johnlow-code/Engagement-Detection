@@ -470,12 +470,18 @@ def app_video_detection():
         return (locs, preds)
 
     def predictvideo(uploadedvideo):
-        vid = uploadedvideo.name 
+        vid = uploadedvideo.name
+        with open(vid, mode='wb') as f:
+            f.write(uploadedvideo.read()) #save the video to disk
+        
         engagedcount=0
         disengagedcount=0
+        st_video = open(vid,'rb')
+        video_bytes = st_video.read()
         processing_text = st.empty()
         processing_text.write("Processing video...")
         cap = cv2.VideoCapture(vid)
+        count = 0
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         steps = (100.0/total)/100
         progress = 0.0
