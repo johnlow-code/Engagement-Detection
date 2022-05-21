@@ -513,7 +513,7 @@ def app_video_detection():
                     else:
                         label = "Disengaged"
                         engagecount[0] = engagecount[0]+1
-                        color = (0, 0, 255)
+                        color = (255, 0, 0)
                     
                     # include the probability in the label
                     label = "{}: {:.2f}%".format(label, max(disengaged, engaged) * 100)
