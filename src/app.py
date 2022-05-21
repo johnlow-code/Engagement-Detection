@@ -543,7 +543,7 @@ def app_video_detection():
         cap.release()
         uploadedvideo = None
 
-    uploadedvideo = st.file_uploader("Upload a video", type=['mp4','mpeg','mov'], accept_multiple_files=False)
+    uploadedvideo = st.file_uploader("Upload a video", type=['mp4','mpeg','mov','avi','wmv'], accept_multiple_files=False)
     if uploadedvideo != None:
         predictvideo(uploadedvideo)
 
