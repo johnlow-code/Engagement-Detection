@@ -437,7 +437,7 @@ def app_video_detection():
 
         faceNet.setInput(blob)
         detections = faceNet.forward()
-        print(detections.shape)
+        #print(detections.shape)
 
         faces = []
         locs = []
@@ -474,8 +474,7 @@ def app_video_detection():
         with open(vid, mode='wb') as f:
             f.write(uploadedvideo.read()) #save the video to disk
         
-        engagedcount=0
-        disengagedcount=0
+        engagecount= [0,0]
         st_video = open(vid,'rb')
         video_bytes = st_video.read()
         processing_text = st.empty()
@@ -508,12 +507,12 @@ def app_video_detection():
                     # the bounding box and text
                     if engaged > disengaged:                      # Tune the Sensitivity here, default is if engaged > disengaged
                         label = "Engaged"
-                        engagedcount = engagedcount+1
+                        engagecount[1] = engagecount[1]+1
                         color = (0, 255, 0)
 
                     else:
                         label = "Disengaged"
-                        disengagedcount = disengagedcount+1
+                        engagecount[0] = engagecount[0]+1
                         color = (0, 0, 255)
                     
                     # include the probability in the label
@@ -525,22 +524,24 @@ def app_video_detection():
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
                     cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
                 
+
                 frame_window.image(frame)
 
             else:
                 break
 
-        engagementrate = calc_engagementrate(engagedcount,disengagedcount)
+        engagementrate = calc_engagementrate(engagecount[1],engagecount[0])
         frame_window.empty()
         progressbar.empty()
         processing_text.empty()
         
-        if engagedcount==0 or disengagedcount==0:
+        if sum(engagecount)==0:
             st.warning("No face has been detected. Please try again with another video.")
         else:
+            st.subheader("Result: ")
             st.write("Engaged: ",engagementrate[0],"%, Disengaged:",engagementrate[1],"%")
         cap.release()
-        #cv2.destroyAllWindows()
+        uploadedvideo = None
 
     uploadedvideo = st.file_uploader("Upload a video", type=['mp4','mpeg','mov'], accept_multiple_files=False)
     if uploadedvideo != None:
