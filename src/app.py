@@ -484,7 +484,7 @@ def app_video_detection():
         count = 0
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         steps = (100.0/total)/100
-        progress = 0.0
+        progress = 0.0 - steps
         progressbar = st.progress(0)
         frame_window = st.image([])
         while True:
