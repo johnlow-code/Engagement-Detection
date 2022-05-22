@@ -117,7 +117,7 @@ def main():
         #"Simple video and audio loopback (sendrecv)": app_loopback,
         #"Configure media constraints and HTML element styles with loopback (sendrecv)": app_media_constraints,  # noqa: E501
         #"Control the playing state programatically": app_programatically_play,
-        "Customize UI texts": app_customize_ui_texts
+        #"Customize UI texts": app_customize_ui_texts
     }
     page_function = pages.keys()
 
@@ -548,20 +548,20 @@ def app_video_detection():
         predictvideo(uploadedvideo)
 
 
-def app_customize_ui_texts():
-    webrtc_streamer(
-        key="custom_ui_texts",
-        rtc_configuration=RTC_CONFIGURATION,
-        translations={
-            "start": "Mula",
-            "stop": "Henti",
-            "select_device": "Pilih peranti",
-            "media_api_not_available": "API media tiada",
-            "device_ask_permission": "Peranti minta kebenaran",
-            "device_not_available": "Peranti tidak sedia",
-            "device_access_denied": "Akses peranti telah dinafikan",
-        },
-    )
+# def app_customize_ui_texts():
+#     webrtc_streamer(
+#         key="custom_ui_texts",
+#         rtc_configuration=RTC_CONFIGURATION,
+#         translations={
+#             "start": "Mula",
+#             "stop": "Henti",
+#             "select_device": "Pilih peranti",
+#             "media_api_not_available": "API media tiada",
+#             "device_ask_permission": "Peranti minta kebenaran",
+#             "device_not_available": "Peranti tidak sedia",
+#             "device_access_denied": "Akses peranti telah dinafikan",
+#         },
+#     )
 
 
 if __name__ == "__main__":
