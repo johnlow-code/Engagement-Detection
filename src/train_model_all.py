@@ -31,7 +31,7 @@ import pandas as pd
 import numpy as np
 import os
 
-INIT_LR = 1e-4  # Initial Learning Rate     Control learning rate, increase 
+INIT_LR = 1e-4  # Initial Learning Rate 
 EPOCHS = 50    # How many runs of trainings
 BS = 64         # Batch Size of the training
 DIRECTORY = r"src\faces"
