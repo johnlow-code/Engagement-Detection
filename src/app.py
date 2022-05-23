@@ -233,7 +233,6 @@ def app_real_time_detection():
                     (endX, endY) = (min(w - 1, endX), min(h - 1, endY))
 
                     face = frame[startY:endY, startX:endX]
-                    #face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
                     face = cv2.resize(face, (299, 299))                 #Change here too
                     face = img_to_array(face)
                     face = preprocess_input(face)   #add imagenet_utils for models other than xception, inception
@@ -349,7 +348,6 @@ def app_image_detection():
                 (endX, endY) = (min(w - 1, endX), min(h - 1, endY))
 
                 face = frame[startY:endY, startX:endX]
-                #face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
                 face = cv2.resize(face, (299, 299))
                 face = img_to_array(face)
                 face = preprocess_input(face)
@@ -454,7 +452,6 @@ def app_video_detection():
                 (endX, endY) = (min(w - 1, endX), min(h - 1, endY))
 
                 face = frame[startY:endY, startX:endX]
-                #face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
                 face = cv2.resize(face, (299, 299))
                 face = img_to_array(face)
                 face = preprocess_input(face)
@@ -491,7 +488,6 @@ def app_video_detection():
             if _ != False:
                 progress = progress+steps
                 progressbar.progress(progress)
-                #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame = imutils.resize(frame, width=400)
 
                 (locs, preds) = detect_engagement(frame, faceNet, engageNet)
