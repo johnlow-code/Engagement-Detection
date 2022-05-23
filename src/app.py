@@ -349,7 +349,7 @@ def app_image_detection():
                 (endX, endY) = (min(w - 1, endX), min(h - 1, endY))
 
                 face = frame[startY:endY, startX:endX]
-                face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
+                #face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
                 face = cv2.resize(face, (299, 299))
                 face = img_to_array(face)
                 face = preprocess_input(face)
@@ -366,8 +366,7 @@ def app_image_detection():
     def predictimage(uploadedimage):
         img1 = Image.open(uploadedimage)
         frame = np.array(img1)
-        # frame = cv2.imdecode(np.fromstring(uploadedimage.read(), np.uint8), cv2.IMREAD_UNCHANGED)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         frame = imutils.resize(frame, width=400)
         # detect faces in the frame and determine if they are wearing a
         # face mask or not
@@ -455,7 +454,7 @@ def app_video_detection():
                 (endX, endY) = (min(w - 1, endX), min(h - 1, endY))
 
                 face = frame[startY:endY, startX:endX]
-                face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
+                #face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
                 face = cv2.resize(face, (299, 299))
                 face = img_to_array(face)
                 face = preprocess_input(face)
@@ -492,7 +491,7 @@ def app_video_detection():
             if _ != False:
                 progress = progress+steps
                 progressbar.progress(progress)
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame = imutils.resize(frame, width=400)
 
                 (locs, preds) = detect_engagement(frame, faceNet, engageNet)
@@ -513,7 +512,7 @@ def app_video_detection():
                     else:
                         label = "Disengaged"
                         engagecount[0] = engagecount[0]+1
-                        color = (255, 0, 0)
+                        color = (0, 0, 255)
                     
                     # include the probability in the label
                     label = "{}: {:.2f}%".format(label, max(disengaged, engaged) * 100)
@@ -524,7 +523,7 @@ def app_video_detection():
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
                     cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
                 
-
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame_window.image(frame)
 
             else:
