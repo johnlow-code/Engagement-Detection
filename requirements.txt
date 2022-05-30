@@ -13,3 +13,4 @@ imutils==0.5.4
 scikit-learn==0.24.2
 mlxtend==0.18.0
 pandas==1.3.2
+protobuf==3.20.1
