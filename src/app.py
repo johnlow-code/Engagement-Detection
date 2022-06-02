@@ -141,8 +141,8 @@ def app_loopback():
 
 def calc_engagement(engagedcount,disengagedcount):
     total = engagedcount+disengagedcount
-    if total ==0:
-        return 0.5
+    if total == 0:
+        return None
     return (engagedcount/total*100.0)
 
 def app_real_time_detection():
@@ -269,11 +269,10 @@ def app_real_time_detection():
     if webrtc_ctx.video_processor:
         webrtc_ctx.video_processor.confidence_threshold = 1-confidence_threshold
 
-    #if st.checkbox("Show stats", value=True):
     if st.checkbox("Show Stats", value=True):
         if webrtc_ctx.state.playing:
-            ratedata = np.array([])
-            max_runtime = 1
+            ratedata = []
+            max_runtime = 1             #Average engagement rate per X seconds
             # NOTE: The video transformation with object detection and
             # this loop displaying the result labels are running
             # in different threads asynchronously.
@@ -293,21 +292,34 @@ def app_real_time_detection():
                         except queue.Empty:
                             result = None
                         
-                    ratedata = np.append(ratedata, calc_engagement(engagedarray.count(['Engaged']),engagedarray.count(['Disengaged'])))
-                    engagedarray.clear()
+                    ratedata.append(calc_engagement(engagedarray.count(['Engaged']),engagedarray.count(['Disengaged'])))
+                    #engagedarray.clear()
                     start_time = datetime.datetime.now()
                 else:
+                    if(sum(1 for x in ratedata if x != None)==0):
+                        if "dataframe" in st.session_state:
+                            del st.session_state["dataframe"]
+                        st.session_state.warning=True
+                        break
                     df = pd.DataFrame(columns=['Minutes','Engagement Rate'])
                     df = df.append(pd.DataFrame(ratedata, columns=['Engagement Rate']), ignore_index=True)
                     x = list(range(1,len(ratedata)+1))
                     df = df.append(pd.DataFrame(x, columns=['Minutes']), ignore_index=True)
                     st.session_state.dataframe = df
+                    average_rate = sum(filter(None, ratedata))/sum(1 for x in ratedata if x != None)
+                    st.session_state.average_rate=average_rate
                     break
-
-
+        
+        if "warning" in st.session_state:
+            st.warning('"Hello! Are you there?" Stats are unavailable as no face is detected. :P')
+            del st.session_state["warning"]
         if "dataframe" in st.session_state:
+            st.write("Average Engagement Rate: {:0.2f}%".format(st.session_state["average_rate"]))
             df = st.session_state["dataframe"]
             st.line_chart(df["Engagement Rate"])
+        
+
+            
 
         #plot graph 
 
@@ -427,6 +439,14 @@ def app_video_detection():
         disengagedrate = 100 - engagedrate
         return [engagedrate, disengagedrate]
 
+    def calc_engagementrateonly(engagedcount, disengagedcount):
+        if engagedcount+disengagedcount==0:
+            return 0
+        total = engagedcount+disengagedcount
+        engagedrate = (float(engagedcount)/float(total))*100
+        engagedrate = round(engagedrate, 2)
+        return engagedrate
+
     def detect_engagement(frame, faceNet, engageNet): 	#recv
         (h, w) = frame.shape[:2]
         blob = cv2.dnn.blobFromImage(frame, 1.0, (299, 299),
@@ -470,13 +490,19 @@ def app_video_detection():
         with open(vid, mode='wb') as f:
             f.write(uploadedvideo.read()) #save the video to disk
         
+        max_runtime = 1
+
         engagecount= [0,0]
+        engagecount_temp = [0,0]
         st_video = open(vid,'rb')
         video_bytes = st_video.read()
         processing_text = st.empty()
         processing_text.write("Processing video...")
         cap = cv2.VideoCapture(vid)
-        count = 0
+        ratedata_video = np.array([])
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        fps = fps*max_runtime
+        frame_count=0
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         steps = (100.0/total)/100
         progress = 0.0 - steps
@@ -502,12 +528,12 @@ def app_video_detection():
                     # the bounding box and text
                     if engaged > disengaged:                      # Tune the Sensitivity here, default is if engaged > disengaged
                         label = "Engaged"
-                        engagecount[1] = engagecount[1]+1
+                        engagecount_temp[1] = engagecount_temp[1]+1
                         color = (0, 255, 0)
 
                     else:
                         label = "Disengaged"
-                        engagecount[0] = engagecount[0]+1
+                        engagecount_temp[0] = engagecount_temp[0]+1
                         color = (0, 0, 255)
                     
                     # include the probability in the label
@@ -519,13 +545,18 @@ def app_video_detection():
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
                     cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
                 
+                if(frame_count%fps==0):
+                    ratedata_video = np.append(ratedata_video, calc_engagementrateonly(engagecount_temp[1],engagecount_temp[0]))
+                    engagecount[0]=engagecount_temp[0] + engagecount[0]
+                    engagecount[1]=engagecount_temp[1]+engagecount[1]
+                    engagecount_temp=[0,0]
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame_window.image(frame)
+                frame_count = frame_count+1
 
             else:
                 break
 
-        engagementrate = calc_engagementrate(engagecount[1],engagecount[0])
         frame_window.empty()
         progressbar.empty()
         processing_text.empty()
@@ -534,7 +565,14 @@ def app_video_detection():
             st.warning("No face has been detected. Please try again with another video.")
         else:
             st.subheader("Result: ")
-            st.write("Engaged: ",engagementrate[0],"%, Disengaged:",engagementrate[1],"%")
+            df_video = pd.DataFrame(columns=['Minutes','Engagement Rate'])
+            df_video = df_video.append(pd.DataFrame(ratedata_video, columns=['Engagement Rate']), ignore_index=True)
+            x = list(range(1,len(ratedata_video)+1))
+            df_video = df_video.append(pd.DataFrame(x, columns=['Minutes']), ignore_index=True)
+            engagementrate = calc_engagementrateonly(engagecount[1],engagecount[0])
+            st.write("Average Engagement Rate: {:0.2f}%".format(engagementrate))
+            st.line_chart(df_video["Engagement Rate"])
+            
         cap.release()
         uploadedvideo = None
 
