@@ -6,13 +6,13 @@ folder_list = os.listdir(data_path)
 print(folder_list)
 
 for video in folder_list:
-    video_path = os.path.join(data_path,video)  #dataset/110001
-    clipfolder_list = os.listdir(video_path)          #dataset/110001/*
-    for clipfolder in clipfolder_list:                #clipfolder = 1100011002
-        clipfolder_path = os.path.join(video_path,clipfolder)     #dataset/110001/1100011002
+    video_path = os.path.join(data_path,video)  
+    clipfolder_list = os.listdir(video_path)          
+    for clipfolder in clipfolder_list:                
+        clipfolder_path = os.path.join(video_path,clipfolder)     
         clip_list = os.listdir(clipfolder_path)
         for clip in clip_list:
-            clip_path = os.path.join(clipfolder_path,clip) #dataset/110001/1100011002/1100011002.avi 
+            clip_path = os.path.join(clipfolder_path,clip) 
         # actual path would be src\dataset\*\*\*.avi
             print(clip_path)
             vid = cv2.VideoCapture(clip_path)

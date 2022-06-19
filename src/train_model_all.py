@@ -16,6 +16,7 @@ from tensorflow.keras.layers import Input
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.applications.inception_v3 import preprocess_input
+from tensorflow.keras.applications import resnet_v2
 from tensorflow.keras.applications import imagenet_utils
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.preprocessing.image import load_img
@@ -51,6 +52,9 @@ if model_num==4 or model_num==5:
     preprocess = preprocess_input
     img_shape = (299,299,3)
 
+elif model_num==3:
+    preprocess = resnet_v2.preprocess_input
+
 #  Images
 
 print("[INFO] loading images")
@@ -64,7 +68,7 @@ for category in CATEGORIES:
         # LOAD IMAGE AND CONVERT SIZE TO 56x56m grayscale images
         image = load_img(img_path, target_size=img_shape)
         image = img_to_array(image) # KERAS: convert image to array
-        image = preprocess(image) # scale input pixels between -1 to 1.
+        image = preprocess(image) 
         
         # Append Image to data list
         data.append(image)
@@ -102,12 +106,11 @@ aug = ImageDataGenerator(
 # load the CNN Architecture here!
 # imagenet is used as the predefined weights for images
 # 1 for 1 grayscale channels
-baseModel = model_name[model_num](weights="imagenet", include_top=False,       #Dont include top for transfer learning
+baseModel = model_name[model_num](weights="imagenet", include_top=False,       # Dont include top for transfer learning
                         input_tensor=Input(shape=img_shape))
 
 # construct the head of the model that will be placed on top of the base mmodel
 headModel = baseModel.output
-# headModel = AveragePooling2D(pool_size=(7,7))(headModel)
 headModel = Flatten(name="flatten")(headModel)
 headModel = Dense(128, activation="relu")(headModel) #non linear, for images
 headModel = Dropout(0.3)(headModel) # Dropout rate, careful of overfitting
