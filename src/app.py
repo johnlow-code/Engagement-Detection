@@ -579,49 +579,67 @@ def app_video_detection():
 def app_user_manual():
     st.info("Welcome! This app is developed by Low Jun Jie for the Final Year Project. Hope this user manual can guide you on using the app.")
     st.subheader("Navigating the website")
-    st.image("src/media/usm-vid8.gif")
     st.markdown("You can navigate the website and switch between application modes via the sidebar as shown above.")
+    st.image("src/media/usm-vid8.gif")
     st.subheader("Real time Detection (webcam)")
-    st.image("src/media/usm2.PNG")
     st.markdown("First, click on *SELECT DEVICE*")
-    st.image("src/media/usm3.PNG")
+    st.image("src/media/usm2.PNG")
+    
     st.markdown("Your browser should show a pop-up prompt stating that streamlit.io wants to use your camera. Click allow.")
-    st.image("src/media/usm4.PNG")
+    st.image("src/media/usm3.PNG")
+    
     st.markdown("You will then be able to choose which camera input device you want to use (provided if you have more than one camera, such as a front camera and back camera on a smartphone.)")
-    st.image("src/media/usm1.PNG")
+    st.image("src/media/usm4.PNG")
+    
     st.markdown("Click *START* and you're ready to go! If nothing shows up, please click *STOP* and *START* button again.")
-    st.image("src/media/usm5.PNG")
+    st.image("src/media/usm1.PNG")
+    
     st.markdown("If you would like the app to track the rate of engagement, make sure that the *Show Stats* checkbox is ticked.")
-    st.image("src/media/usm-vid1.gif")
+    st.image("src/media/usm5.PNG")
+    
     st.markdown("Sometimes, the app will have a tendency of falsely detecting the user as disengaged even when the user is actually engaged. To fix this, you can adjust the *Sensitivity to Engagement* slider.")
     st.markdown("Make sure to restart the camera video stream(as shown above) in order for any changes to take effect.")
-    st.image("src/media/usm6.PNG")
+    st.image("src/media/usm-vid1.gif")
+
     st.markdown("If **NotReadableError** occured, make sure that your camera isn't currently being used for another application.")
+    st.image("src/media/usm6.PNG")
+
     st.subheader("Engagement Rate Graph")
     st.markdown("When a face is detected in the webcam or video app mode, an engagement rate graph will be shown. ")
-    st.image("src/media/usm-vid6.gif")
     st.markdown("You can zoom in/out and pan the graph however you like.")
-    st.image("src/media/usm-vid3.gif")
+    st.image("src/media/usm-vid6.gif")
+    
     st.markdown("You can also download the graph by accessing the three dots menu.")
-    st.image("src/media/usm-vid7.gif")
+    st.image("src/media/usm-vid3.gif")
+    
     st.markdown("You can expand the graph to be shown fullscreen too!")
+    st.image("src/media/usm-vid7.gif")
+    
     st.subheader("Detect Engagement (Photo)")
-    st.image("src/media/usm-vid4.gif")
     st.markdown("You can upload an image to have the app predict whether the face detected is disengaged or engaged.")
-    st.image("src/media/usm-vid5.gif")
+    st.image("src/media/usm-vid4.gif")
+    
     st.markdown("If you would like to upload another image, simply click the *Browse files* button again.")
+    st.image("src/media/usm-vid5.gif")
+    
     st.subheader("Detect Engagement (Video)")
-    st.image("src/media/usm-vid2.gif")
+    
     st.markdown("You can upload a video to detect engagement. Once the video is uploaded, you will see a progress bar along with some preview of the prediction results.")
     st.markdown("Once the processing is done, you will be greeted with an average engagement rate result and a graph containing the engagement rate throughout the length of the video.")
+    st.image("src/media/usm-vid2.gif")
+    st.markdown("Similar to the previous app mode, you can upload another video by clicking *Browse files* again.")
+
     st.subheader("Accessibility - Changing the color theme of the app")
-    st.image("src/media/usm-vid9.gif")
+    
     st.markdown("You can change between light mode / dark mode as shown above.")
+    st.image("src/media/usm-vid9.gif")
     st.subheader("Debugging")
-    st.image("src/media/usm-vid10.gif")
+    
     st.markdown("Rerun is a useful feature to have if you ever encounter any bugs or if the application somehow stops working.")
-    st.image("src/media/usm6.PNG")
+    st.image("src/media/usm-vid10.gif")
+    
     st.markdown("If **NotReadableError** occured in the real time detection app, make sure that your camera isn't currently being used on another application.")
+    st.image("src/media/usm6.PNG")
     st.markdown("The app is currently being hosted on share.streamlit.io on a free plan, which means the application may run out of its limited bandwidth/memory.")
     st.markdown("Please do not hesitate to contact Jun Jie if this happens. Thank you for your support and suggestions for improvements!")
 
