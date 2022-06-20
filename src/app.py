@@ -579,7 +579,7 @@ def app_video_detection():
 def app_user_manual():
     st.info("Welcome! This app is developed by Low Jun Jie for the Final Year Project. Hope this user manual can guide you on using the app.")
     st.subheader("Navigating the website")
-    st.markdown("You can navigate the website and switch between application modes via the sidebar as shown above.")
+    st.markdown("You can navigate the website and switch between application modes via the sidebar as shown below.")
     st.image("src/media/usm-vid8.gif")
     st.subheader("Real time Detection (webcam)")
     st.markdown("First, click on *SELECT DEVICE*")
@@ -598,7 +598,7 @@ def app_user_manual():
     st.image("src/media/usm5.PNG")
     
     st.markdown("Sometimes, the app will have a tendency of falsely detecting the user as disengaged even when the user is actually engaged. To fix this, you can adjust the *Sensitivity to Engagement* slider.")
-    st.markdown("Make sure to restart the camera video stream(as shown above) in order for any changes to take effect.")
+    st.markdown("Make sure to restart the camera video stream(as shown below) in order for any changes to take effect.")
     st.image("src/media/usm-vid1.gif")
 
     st.markdown("If **NotReadableError** occured, make sure that your camera isn't currently being used for another application.")
@@ -631,7 +631,7 @@ def app_user_manual():
 
     st.subheader("Accessibility - Changing the color theme of the app")
     
-    st.markdown("You can change between light mode / dark mode as shown above.")
+    st.markdown("You can change between light mode / dark mode as shown below.")
     st.image("src/media/usm-vid9.gif")
     st.subheader("Debugging")
     
