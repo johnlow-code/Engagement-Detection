@@ -494,7 +494,7 @@ def app_video_detection():
         video_bytes = st_video.read()
         processing_text = st.empty()
         processing_text.write("Processing video...")
-        cap = cv2.VideoCapture(vid, apiPreference=cv2.CAP_MSMF)
+        cap = cv2.VideoCapture(vid) #, apiPreference=cv2.CAP_MSMF
         ratedata_video = np.array([])
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         fps = fps*max_runtime
