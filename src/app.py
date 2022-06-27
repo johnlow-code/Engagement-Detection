@@ -426,6 +426,7 @@ def app_video_detection():
     faceNet  = cv2.dnn.readNet(
                 str(PROTOTXT_LOCAL_PATH), str(MODEL_LOCAL_PATH)
             )
+
     def calc_engagementrate(engagedcount, disengagedcount):
         if engagedcount+disengagedcount==0:
             return ""
