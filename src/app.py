@@ -30,7 +30,7 @@ from streamlit_webrtc import (
     WebRtcMode,
     webrtc_streamer,
 )
-from PIL import Image
+from PIL import Image, ImageOps
 import imutils
 
 HERE = Path(__file__).parent
@@ -370,6 +370,7 @@ def app_image_detection():
     def predictimage(uploadedimage):
         with st.spinner('Please wait...'):
             img1 = Image.open(uploadedimage)
+            img1 = ImageOps.exif_transpose(img1)
             frame = np.array(img1)
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             frame = imutils.resize(frame, width=400)
@@ -493,7 +494,7 @@ def app_video_detection():
         video_bytes = st_video.read()
         processing_text = st.empty()
         processing_text.write("Processing video...")
-        cap = cv2.VideoCapture(vid)
+        cap = cv2.VideoCapture(vid, apiPreference=cv2.CAP_MSMF)
         ratedata_video = np.array([])
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         fps = fps*max_runtime
